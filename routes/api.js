@@ -29,17 +29,21 @@ module.exports = function (app) {
   app.route('/api/threads/:board')
   .post((req, res) => {
     let data = req.body
-    console.log(data)
-    let newMsg = new Msg({
-      board: data.board,
-      text: data.text,
-      delete_password: data.delete_password
-    })
+    let newMsg = new Msg(data)
+
+    if(!newMsg.board || newMsg.board === '') {
+       newMsg.board = req.params.board
+    }
+
+    newMsg.created_on = new Date().toUTCString()
+    newMsg.bumped_on = new Date().toUTCString()
+    newMsg.reported = false
+    newMsg.replies = []
 
     newMsg.save()
           . then((result) => {
             console.log('New Msg created: ', result)
-            res.status(201).json(result)
+            res.redirect('/b/' + result.board + '/' + result.id).status(200)
           })
           .catch(err => {
             console.error('Error creating message: ', err)

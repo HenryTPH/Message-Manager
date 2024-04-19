@@ -64,11 +64,25 @@ module.exports = function (app) {
   })
     
   app.route('/api/replies/:board')
-  .post((req, res) => {
+  .post(async (req, res) => {
     let data = req.body
-    let threadId = data['thread_id']
-    let board = req.params
+    let newReply = new Reply(data)
     
+    newReply.created_on = new Date().toUTCString()
+    newReply.reported = false
+    console.log('This is new Reply:' + newReply)
+    
+    Msg.findByIdAndUpdate(
+        data.thread_id,
+        {$push: {replies: newReply}, bumped_on: new Date().toUTCString()},
+        {new: true}
+      ).then(updatedMsg => {
+        console.log('update msg: ' + updatedMsg)
+        console.log('Thread ID: ' + data.thread_id)
+        res.redirect('/b/' + updatedMsg.board + '/' + updatedMsg.id + '?new_reply_id=' + newReply.id)
+      }).catch(err => {
+        console.error(err)
+      })    
   })
 
   .get((req, res) => {

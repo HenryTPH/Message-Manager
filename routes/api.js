@@ -52,7 +52,16 @@ module.exports = function (app) {
   })
 
   .get((req, res) => {
-    // let bumpedThread = 
+    Msg.find({board: res.params.board})
+        .sort({bumped_on: 'desc'})
+        .limit(10)
+        .select('-delete_password -reported')
+        .lean()
+        .exec((err, array) => {
+          if(!err && array) {
+            
+          }
+        })
   })
 
   .put((req, res) => {

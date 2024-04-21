@@ -25,4 +25,20 @@ suite('Functional Tests', function() {
                 done()
             })
     })
+
+    test('Post a reply', (done) => {
+        chai.request(server)
+            .post('/api/replies/test')
+            .send({
+                thread_id: msgId,
+                text: 'Test reply to a thread',
+                delete_password: pass
+            })
+            .end((err, res) => {
+                assert.equal(res.status, 200)
+                let createdReplyId = res.redirect[0].split('=')[res.redirect[0].split('=').length - 1]
+                replyId = createdReplyId
+                done()
+            })
+    })
 });

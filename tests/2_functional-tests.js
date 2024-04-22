@@ -41,4 +41,32 @@ suite('Functional Tests', function() {
                 done()
             })
     })
+
+    test('Get msg from a board', done =>{
+        chai.request(server)
+            .get('api/threads/:board')
+            .send()
+            .end((err, res) => {
+                assert.isArray(res.body)
+                assert.isAtMost(res.body.length, 10)
+                let secondMsg = res.board[1]
+                assert.isAtMost(secondMsg.replies.length, 3)
+                done()
+
+            })
+    })
+
+    test('Get replies on a thread', done => {
+        chai.request(server)
+            .get('/api/replies/test')
+            .query({thread_id: msgId})
+            .send()
+            .end((err, res) => {
+                let msg = res.body
+                assert.equal(msg._id, msgId)
+                assert.isUndefined(msg.delete_password)
+                assert.isArray(msg.replies)
+                done()
+            })
+    })
 });

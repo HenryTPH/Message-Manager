@@ -52,15 +52,30 @@ module.exports = function (app) {
   })
 
   .get((req, res) => {
-    Msg.find({board: res.params.board})
+    Msg.find({board: req.params.board})
         .sort({bumped_on: 'desc'})
         .limit(10)
         .select('-delete_password -reported')
         .lean()
-        .exec((err, array) => {
-          if(!err && array) {
+        .then(result => {
+          result.forEach(rs => {
+            rs['replycount'] = rs.replies.length
             
-          }
+            // Sort the result by created date
+            rs.replies.sort((rep1, rep2) => {
+              return rep2.created_on - rep1.created_on
+            })
+            // Only display 3 recent replies
+            rs.replies = rs.replies.slice(0,3)
+            // Eliminate reported and delete_password field in replies
+            rs.replies.forEach(rep => {
+              delete rep.delete_password
+              delete rep.reported
+            });
+          })
+          return res.json(result)
+        }).catch(err => {
+          console.error(err)
         })
   })
 
@@ -95,7 +110,22 @@ module.exports = function (app) {
   })
 
   .get((req, res) => {
-
+    let threadId = req.query.thread_id
+    Msg.findById(threadId, '-delete_password -reported')
+      .then((result) =>  {
+        
+        result.replies.sort((rep1, rep2) => {
+          return rep2.created_on - rep1.created_on
+        })
+        
+        result.replies.forEach(rs => {
+          rs.delete_password = undefined
+          rs.reported = undefined
+        })
+        return res.json(result)
+      }).catch(err =>{
+        console.error(err)
+      })
   })
 
   .put((req, res) => {

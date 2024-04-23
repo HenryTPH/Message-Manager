@@ -149,7 +149,19 @@ module.exports = function (app) {
   })
 
   .put((req, res) => {
-    
+    let data = req.body
+    Msg.findById(data.thread_id)
+      .then(result => {
+        if(!result) return res.json('Thread Not Found')
+        result.replies.forEach(rep => {
+          if(rep.id === data.reply_id){
+            rep.reported = true            
+          }
+        })
+        result.save().then(rs =>{
+          return res.json('reported')
+        })
+      })
   })
 
   .delete((req, res) => {

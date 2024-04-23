@@ -43,7 +43,7 @@ module.exports = function (app) {
     newMsg.save()
           . then((result) => {
             console.log('New Msg created: ', result)
-            res.redirect('/b/' + result.board + '/' + result.id).status(200)
+            res.redirect('/b/' + result.board + '/' + result.id)
           })
           .catch(err => {
             console.error('Error creating message: ', err)
@@ -80,11 +80,31 @@ module.exports = function (app) {
   })
 
   .put((req, res) => {
-
+    Msg.findByIdAndUpdate(
+      req.body.thread_id,
+      {reported: true},
+      {new: true}
+    ).then(rs => {
+      if(rs) return res.json('success')
+    })
   })
 
   .delete((req, res) => {
-
+    let data = req.body
+    Msg.findById(data.thread_id)
+      .then(result => {
+        if(!result) return res.json('Not found')
+        if(result.delete_password === data.delete_password){
+          Msg.findByIdAndDelete(data.thread_id)
+            .then(result => {
+              if(result) return res.json('success')
+            })
+        } else {
+          res.json('incorrect password')
+        }
+      }).catch(err => {
+        console.error(err)
+      })
   })
     
   app.route('/api/replies/:board')
@@ -133,7 +153,23 @@ module.exports = function (app) {
   })
 
   .delete((req, res) => {
-    
+    let data = req.body
+    Msg.findById(data.thread_id)
+      .then(result => {
+        if(!result) return res.json('Not found!')
+        result.replies.forEach(rep => {
+          if(rep.id === data.reply_id){
+            if(rep.delete_password === data.delete_password){
+              rep.text = '[deleted]'
+            } else {
+              return res.json('incorrect password ')
+            }
+          } 
+        })
+        result.save().then(result => {
+          if(result) return res.json('success')
+        })
+      })
   })
 
 };

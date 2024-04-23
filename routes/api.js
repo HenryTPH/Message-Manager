@@ -42,7 +42,6 @@ module.exports = function (app) {
 
     newMsg.save()
           . then((result) => {
-            console.log('New Msg created: ', result)
             res.redirect('/b/' + result.board + '/' + result.id)
           })
           .catch(err => {
@@ -114,15 +113,12 @@ module.exports = function (app) {
     
     newReply.created_on = new Date().toUTCString()
     newReply.reported = false
-    console.log('This is new Reply:' + newReply)
     
     Msg.findByIdAndUpdate(
         data.thread_id,
         {$push: {replies: newReply}, bumped_on: new Date().toUTCString()},
         {new: true}
       ).then(updatedMsg => {
-        console.log('update msg: ' + updatedMsg)
-        console.log('Thread ID: ' + data.thread_id)
         res.redirect('/b/' + updatedMsg.board + '/' + updatedMsg.id + '?new_reply_id=' + newReply.id)
       }).catch(err => {
         console.error(err)

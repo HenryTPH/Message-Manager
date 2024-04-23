@@ -12,7 +12,7 @@ suite('Functional Tests', function() {
 
     test('Create a new message', (done) => {
         chai.request(server)
-            .post('/api/thread/test')
+            .post('/api/threads/test')
             .send({
                 board: 'test',
                 text: 'Functional test thread',
@@ -20,7 +20,7 @@ suite('Functional Tests', function() {
             })
             .end((err, res) => {
                 assert.equal(res.status, 200)
-                let newMsgId = res.redirect[0].split('/')[res.redirect[0].split('/').length - 1]
+                let newMsgId = res.redirects[0].split('/')[res.redirects[0].split('/').length - 1]
                 msgId = newMsgId
                 done()
             })
@@ -34,9 +34,9 @@ suite('Functional Tests', function() {
                 text: 'Test reply to a thread',
                 delete_password: pass
             })
-            .end((err, res) => {
+            .end((err, res) => {                
                 assert.equal(res.status, 200)
-                let createdReplyId = res.redirect[0].split('=')[res.redirect[0].split('=').length - 1]
+                let createdReplyId = res.redirects[0].split('=')[res.redirects[0].split('=').length - 1]
                 replyId = createdReplyId
                 done()
             })
@@ -44,15 +44,16 @@ suite('Functional Tests', function() {
 
     test('Get msg from a board', done =>{
         chai.request(server)
-            .get('api/threads/:board')
+            .get('/api/threads/test')
             .send()
             .end((err, res) => {
+                console.log('=================')
+                console.log(res.body)
                 assert.isArray(res.body)
                 assert.isAtMost(res.body.length, 10)
-                let secondMsg = res.board[1]
+                let secondMsg = res.body[0]
                 assert.isAtMost(secondMsg.replies.length, 3)
                 done()
-
             })
     })
 
@@ -97,7 +98,7 @@ suite('Functional Tests', function() {
 
     test('Delete a reply on a thread', done => {
         chai.request(server)
-            .delete('api/replies/test')
+            .delete('/api/replies/test')
             .send({
                 thread_id: msgId,
                 reply_id: replyId,
